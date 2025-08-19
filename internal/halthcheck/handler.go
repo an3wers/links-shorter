@@ -9,7 +9,7 @@ type HalthHandler struct{}
 
 func NewHalthHandler(router *http.ServeMux) {
 	handler := &HalthHandler{}
-	router.HandleFunc("/halthcheck", handler.Halth())
+	router.HandleFunc("GET /halthcheck", handler.Halth())
 }
 
 func (handler *HalthHandler) Halth() http.HandlerFunc {

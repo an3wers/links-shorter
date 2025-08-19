@@ -70,6 +70,16 @@ func (handler *LinkHandler) GetLinks() http.HandlerFunc {
 
 func (handler *LinkHandler) GoTo() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		hash := r.PathValue("hash")
+
+		link, err := handler.Repo.GetByHash(hash)
+
+		if err != nil {
+			resp.Json(w, http.StatusNotFound, err.Error())
+			return
+		}
+
+		http.Redirect(w, r, link.Url, http.StatusTemporaryRedirect)
 
 	}
 }

@@ -5,22 +5,13 @@ type LinkCreateRequest struct {
 }
 
 type LinkUpdateRequest struct {
-	Id  string `json:"id"`
 	Url string `json:"url"`
 }
 
-type LinkDeleteRequest struct {
-	Id string `json:"id"`
-}
-
-type LinkGetRequest struct {
-	Id string `json:"id"`
-}
-
-type LinkGetResponse struct {
-	Id        string `json:"id"`
-	Url       string `json:"url"`
-	Hash      string `json:"hash"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
-}
+// type LinkGetResponse struct {
+// 	Id        string `json:"id"`
+// 	Url       string `json:"url"`
+// 	Hash      string `json:"hash"`
+// 	CreatedAt string `json:"created_at"`
+// 	UpdatedAt string `json:"updated_at"`
+// }

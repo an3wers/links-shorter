@@ -73,8 +73,14 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 		// 	return
 		// }
 
-		res := LoginResponse{Token: "login-token"}
-		resp.Json(w, http.StatusOK, res)
+		user, err := handler.AuthService.Login(body.Email, body.Password)
+
+		if err != nil {
+			resp.Json(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		resp.Json(w, http.StatusOK, user)
 	}
 }
 

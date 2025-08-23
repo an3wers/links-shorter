@@ -2,6 +2,7 @@ package user
 
 import (
 	"go/links-shorter/pkg/db"
+	"log"
 
 	"gorm.io/gorm/clause"
 )
@@ -18,6 +19,8 @@ func (repository *UserRepository) GetByEmail(email string) (*User, error) {
 	var user User
 
 	result := repository.Db.First(&user, "email = ?", email)
+
+	log.Println("result: ", result)
 
 	if result.Error != nil {
 		return nil, result.Error

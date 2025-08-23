@@ -7,6 +7,7 @@ import (
 	"go/links-shorter/internal/halthcheck"
 	"go/links-shorter/internal/link"
 	"go/links-shorter/pkg/db"
+	"go/links-shorter/pkg/middleware"
 	"net/http"
 )
 
@@ -24,10 +25,13 @@ func main() {
 	auth.NewAuthHandler(router, auth.AuthHandlerDeps{DbConfig: &conf.Db, AuthConfig: &conf.Auth})
 	link.NewLinkHandler(router, link.LinkHandlerDeps{Repo: linkRepo})
 
+	// middlewares
+	stack := middleware.Chain(middleware.Cors, middleware.Logging)
+
 	// server
 	server := http.Server{
 		Addr:    ":8080",
-		Handler: router,
+		Handler: stack(router), // middleware.Cors(middleware.Logging(router)),
 	}
 
 	fmt.Println("Server started on port 8080")

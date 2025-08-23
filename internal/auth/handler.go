@@ -2,6 +2,7 @@ package auth
 
 import (
 	"go/links-shorter/configs"
+	"go/links-shorter/pkg/jwt"
 	"go/links-shorter/pkg/req"
 	"go/links-shorter/pkg/resp"
 	"net/http"
@@ -76,11 +77,22 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 		user, err := handler.AuthService.Login(body.Email, body.Password)
 
 		if err != nil {
-			resp.Json(w, http.StatusBadRequest, err.Error())
+			resp.Json(w, http.StatusUnauthorized, err.Error())
 			return
 		}
 
-		resp.Json(w, http.StatusOK, user)
+		token, err := jwt.NewJWT(handler.AuthConfig.SecretKey).Create(user.Email)
+
+		if err != nil {
+			resp.Json(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		data := LoginResponse{
+			Token: token,
+		}
+
+		resp.Json(w, http.StatusOK, data)
 	}
 }
 
@@ -101,7 +113,18 @@ func (handler *AuthHandler) Register() http.HandlerFunc {
 			return
 		}
 
-		resp.Json(w, http.StatusCreated, user)
+		token, err := jwt.NewJWT(handler.AuthConfig.SecretKey).Create(user.Email)
+
+		if err != nil {
+			resp.Json(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		data := RegisterResponse{
+			Token: token,
+		}
+
+		resp.Json(w, http.StatusCreated, data)
 
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"go/links-shorter/internal/auth"
 	"go/links-shorter/internal/halthcheck"
 	"go/links-shorter/internal/link"
+	"go/links-shorter/internal/user"
 	"go/links-shorter/pkg/db"
 	"go/links-shorter/pkg/middleware"
 	"net/http"
@@ -14,15 +15,27 @@ import (
 func main() {
 	// config
 	conf := configs.GetConfig()
+
+	// database
 	db := db.NewDb(conf)
 
 	// repositories
 	linkRepo := link.NewLinkRepository(db)
+	userRepo := user.NewUserRepository(db)
+
+	// services
+	authService := auth.NewAuthService((userRepo))
+
+	// create router (Mux)
+	router := http.NewServeMux()
 
 	// handlers
-	router := http.NewServeMux()
 	halthcheck.NewHalthHandler(router)
-	auth.NewAuthHandler(router, auth.AuthHandlerDeps{DbConfig: &conf.Db, AuthConfig: &conf.Auth})
+	auth.NewAuthHandler(
+		router, auth.AuthHandlerDeps{DbConfig: &conf.Db,
+			AuthConfig:  &conf.Auth,
+			AuthService: authService,
+		})
 	link.NewLinkHandler(router, link.LinkHandlerDeps{Repo: linkRepo})
 
 	// middlewares
@@ -31,9 +44,10 @@ func main() {
 	// server
 	server := http.Server{
 		Addr:    ":8080",
-		Handler: stack(router), // middleware.Cors(middleware.Logging(router)),
+		Handler: stack(router),
 	}
 
+	// start
 	fmt.Println("Server started on port 8080")
 	server.ListenAndServe()
 

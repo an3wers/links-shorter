@@ -1,6 +1,7 @@
 package link
 
 import (
+	"go/links-shorter/pkg/middleware"
 	"go/links-shorter/pkg/req"
 	"go/links-shorter/pkg/resp"
 	"net/http"
@@ -24,11 +25,11 @@ func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) {
 	}
 
 	router.HandleFunc("POST /link", handler.CreateLink())
-	router.HandleFunc("GET /link/{id}", handler.GetLink())
-	router.HandleFunc("GET /link", handler.GetLinks())
+	router.Handle("GET /link/{id}", middleware.Auth(handler.GetLink()))
+	router.Handle("GET /link", middleware.Auth(handler.GetLinks()))
 	router.HandleFunc("GET /{hash}", handler.GoTo())
-	router.HandleFunc("PATCH /link/{id}", handler.UpdateLink())
-	router.HandleFunc("DELETE /link/{id}", handler.DeleteLink())
+	router.Handle("PATCH /link/{id}", middleware.Auth(handler.UpdateLink()))
+	router.Handle("DELETE /link/{id}", middleware.Auth(handler.DeleteLink()))
 }
 
 func (handler *LinkHandler) CreateLink() http.HandlerFunc {

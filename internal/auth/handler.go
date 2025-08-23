@@ -9,19 +9,22 @@ import (
 )
 
 type AuthHandlerDeps struct {
-	DbConfig   *configs.DbConfig
-	AuthConfig *configs.AuthConfig
+	DbConfig    *configs.DbConfig
+	AuthConfig  *configs.AuthConfig
+	AuthService *AuthService
 }
 
 type AuthHandler struct {
-	DbConfig   *configs.DbConfig
-	AuthConfig *configs.AuthConfig
+	DbConfig    *configs.DbConfig
+	AuthConfig  *configs.AuthConfig
+	AuthService *AuthService
 }
 
 func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
 	handler := &AuthHandler{
-		DbConfig:   deps.DbConfig,
-		AuthConfig: deps.AuthConfig,
+		DbConfig:    deps.DbConfig,
+		AuthConfig:  deps.AuthConfig,
+		AuthService: deps.AuthService,
 	}
 	router.HandleFunc("POST /auth/login", handler.Login())
 	router.HandleFunc("POST /auth/register", handler.Register())
@@ -85,7 +88,14 @@ func (handler *AuthHandler) Register() http.HandlerFunc {
 			return
 		}
 
-		resp.Json(w, http.StatusOK, struct{}{})
+		user, err := handler.AuthService.Register(body.Email, body.Password, body.Name)
+
+		if err != nil {
+			resp.Json(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		resp.Json(w, http.StatusCreated, user)
 
 	}
 }

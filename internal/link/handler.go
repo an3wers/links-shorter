@@ -1,6 +1,7 @@
 package link
 
 import (
+	"go/links-shorter/configs"
 	"go/links-shorter/pkg/middleware"
 	"go/links-shorter/pkg/req"
 	"go/links-shorter/pkg/resp"
@@ -11,11 +12,13 @@ import (
 )
 
 type LinkHandlerDeps struct {
-	Repo *LinkRepository
+	Repo   *LinkRepository
+	Config *configs.Config
 }
 
 type LinkHandler struct {
-	Repo *LinkRepository
+	Repo   *LinkRepository
+	Config *configs.Config
 }
 
 func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) {
@@ -24,12 +27,15 @@ func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) {
 		Repo: deps.Repo,
 	}
 
+	// public
 	router.HandleFunc("POST /link", handler.CreateLink())
-	router.Handle("GET /link/{id}", middleware.Auth(handler.GetLink()))
-	router.Handle("GET /link", middleware.Auth(handler.GetLinks()))
 	router.HandleFunc("GET /{hash}", handler.GoTo())
-	router.Handle("PATCH /link/{id}", middleware.Auth(handler.UpdateLink()))
-	router.Handle("DELETE /link/{id}", middleware.Auth(handler.DeleteLink()))
+
+	// auth
+	router.Handle("GET /link/{id}", middleware.Auth(handler.GetLink(), deps.Config))
+	router.Handle("GET /link", middleware.Auth(handler.GetLinks(), deps.Config))
+	router.Handle("PATCH /link/{id}", middleware.Auth(handler.UpdateLink(), deps.Config))
+	router.Handle("DELETE /link/{id}", middleware.Auth(handler.DeleteLink(), deps.Config))
 }
 
 func (handler *LinkHandler) CreateLink() http.HandlerFunc {
@@ -99,6 +105,8 @@ func (handler *LinkHandler) GetLink() http.HandlerFunc {
 
 		idStr := r.PathValue("id")
 		id, err := strconv.ParseUint(idStr, 10, 64)
+
+		// fmt.Println("Context", r.Context().Value(middleware.ContextAuthKey).(string))
 
 		if err != nil {
 			resp.Json(w, http.StatusBadRequest, err.Error())

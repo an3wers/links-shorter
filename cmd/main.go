@@ -36,7 +36,7 @@ func main() {
 			AuthConfig:  &conf.Auth,
 			AuthService: authService,
 		})
-	link.NewLinkHandler(router, link.LinkHandlerDeps{Repo: linkRepo})
+	link.NewLinkHandler(router, link.LinkHandlerDeps{Repo: linkRepo, Config: conf})
 
 	// middlewares
 	stack := middleware.Chain(middleware.Cors, middleware.Logging)

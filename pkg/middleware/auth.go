@@ -1,12 +1,21 @@
 package middleware
 
 import (
+	"context"
+	"go/links-shorter/configs"
+	"go/links-shorter/pkg/jwt"
 	"go/links-shorter/pkg/resp"
 	"net/http"
 	"strings"
 )
 
-func Auth(next http.Handler) http.Handler {
+type key string
+
+const (
+	ContextAuthKey key = "contextAuthKey"
+)
+
+func Auth(next http.Handler, config *configs.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		bearerToken := r.Header.Get("Authorization")
@@ -16,18 +25,25 @@ func Auth(next http.Handler) http.Handler {
 			return
 		}
 
-		// token := strings.Split(bearerToken, " ")
+		if !strings.HasPrefix(bearerToken, "Bearer ") {
+			resp.Json(w, http.StatusUnauthorized, "Unauthorized")
+			return
+		}
 
-		// if len(token) < 2 {
-		// 	resp.Json(w, http.StatusUnauthorized, "Unauthorized")
-		// 	return
-		// }
-
-		// r.Header.Set("AuthToken", token[1])
-		// Так проще
 		token := strings.TrimPrefix(bearerToken, "Bearer ")
-		r.Header.Set("AuthToken", token)
 
-		next.ServeHTTP(w, r)
+		isValid, data := jwt.NewJWT(config.Auth.SecretKey).Parse(token)
+
+		if !isValid {
+			resp.Json(w, http.StatusUnauthorized, "Unauthorized")
+			return
+		}
+
+		reqContext := r.Context()
+		ctx := context.WithValue(reqContext, ContextAuthKey, data.Email)
+
+		req := r.WithContext(ctx)
+
+		next.ServeHTTP(w, req)
 	})
 }

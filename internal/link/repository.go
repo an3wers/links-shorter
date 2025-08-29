@@ -65,3 +65,32 @@ func (repository *LinkRepository) GetLinkById(id uint) (*Link, error) {
 
 	return &link, nil
 }
+
+func (repository *LinkRepository) Count() (int64, error) {
+	var count int64
+	result := repository.Db.Table("links").Where("deleted_at IS NULL").Count(&count)
+
+	if result.Error != nil {
+		return 0, result.Error
+	}
+
+	return count, nil
+}
+
+func (repository *LinkRepository) GetLinks(limit, offset int) ([]Link, error) {
+	var links []Link
+	result := repository.Db.
+		Table("links").
+		Where("deleted_at IS NULL").
+		Order("created_at DESC").
+		Limit(limit).
+		Offset(offset).
+		Scan(&links)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return links, nil
+
+}

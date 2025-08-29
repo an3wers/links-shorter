@@ -8,6 +8,14 @@ type LinkUpdateRequest struct {
 	Url string `json:"url"`
 }
 
+type LinksGetResponse struct {
+	Links      []Link `json:"links"`
+	Page       int    `json:"page"`
+	Limit      int    `json:"limit"`
+	Total      int64  `json:"total"`
+	TotalPages int64  `json:"totalPages"`
+}
+
 // type LinkGetResponse struct {
 // 	Id        string `json:"id"`
 // 	Url       string `json:"url"`

@@ -5,6 +5,7 @@ import (
 	"go/links-shorter/pkg/middleware"
 	"go/links-shorter/pkg/req"
 	"go/links-shorter/pkg/resp"
+	"math"
 	"net/http"
 	"strconv"
 
@@ -127,7 +128,48 @@ func (handler *LinkHandler) GetLink() http.HandlerFunc {
 
 func (handler *LinkHandler) GetLinks() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO: implement
+		page, err := strconv.Atoi(r.URL.Query().Get("page"))
+
+		if err != nil {
+			page = 1
+		}
+
+		limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+
+		if err != nil {
+			limit = 10
+		}
+
+		offset := (page - 1) * limit
+
+		links, err := handler.Repo.GetLinks(limit, offset)
+		if err != nil {
+			resp.Json(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		if len(links) == 0 {
+			links = []Link{}
+		}
+
+		total, err := handler.Repo.Count()
+
+		if err != nil {
+			resp.Json(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		totalPages := int64(math.Ceil(float64(total) / float64(limit)))
+
+		response := LinksGetResponse{
+			Links:      links,
+			Page:       page,
+			Limit:      limit,
+			Total:      total,
+			TotalPages: totalPages,
+		}
+
+		resp.Json(w, http.StatusOK, response)
 	}
 }
 

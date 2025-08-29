@@ -13,7 +13,7 @@ type LinksGetResponse struct {
 	Page       int    `json:"page"`
 	Limit      int    `json:"limit"`
 	Total      int64  `json:"total"`
-	TotalPages int64  `json:"totalPages"`
+	TotalPages int64  `json:"total_pages"`
 }
 
 // type LinkGetResponse struct {

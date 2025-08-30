@@ -1,6 +1,7 @@
 package stat
 
 import (
+	"errors"
 	"go/links-shorter/pkg/db"
 	"time"
 
@@ -37,4 +38,29 @@ func (repository *StatRepository) AddClick(linkId uint) error {
 	}
 
 	return nil
+}
+
+func (repository *StatRepository) GetStat(from, to time.Time, by string) ([]GetStatSqlResponse, error) {
+	var stats []GetStatSqlResponse
+	var selectQuery string
+
+	switch by {
+	case "day":
+		selectQuery = "to_char(date, 'YYYY-MM-DD') as period, sum(clicks) as sum"
+	case "month":
+		selectQuery = "to_char(date, 'YYYY-MM') as period, sum(clicks) as sum"
+	case "year":
+		selectQuery = "to_char(date, 'YYYY') as period, sum(clicks) as sum"
+	default:
+		return nil, errors.New("invalid by")
+	}
+
+	repository.Db.Table("stats").
+		Select(selectQuery).
+		Where("date BETWEEN ? AND ?", from, to).
+		Group("period").
+		Order("period").
+		Scan(&stats)
+
+	return stats, nil
 }

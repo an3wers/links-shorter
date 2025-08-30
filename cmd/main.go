@@ -9,6 +9,7 @@ import (
 	"go/links-shorter/internal/stat"
 	"go/links-shorter/internal/user"
 	"go/links-shorter/pkg/db"
+	"go/links-shorter/pkg/event"
 	"go/links-shorter/pkg/middleware"
 	"net/http"
 )
@@ -20,6 +21,9 @@ func main() {
 	// database
 	db := db.NewDb(conf)
 
+	// EventBus
+	eventBus := event.NewEventBus()
+
 	// repositories
 	linkRepo := link.NewLinkRepository(db)
 	userRepo := user.NewUserRepository(db)
@@ -27,6 +31,13 @@ func main() {
 
 	// services
 	authService := auth.NewAuthService((userRepo))
+	statService := stat.NewStatService(stat.StatServiceDeps{
+		EventBus:       eventBus,
+		StatRepository: statRepo,
+	})
+
+	// listen events
+	go statService.ListenEvents()
 
 	// create router (Mux)
 	router := http.NewServeMux()
@@ -39,7 +50,11 @@ func main() {
 			AuthService: authService,
 		})
 
-	link.NewLinkHandler(router, link.LinkHandlerDeps{Repo: linkRepo, StatRepo: statRepo, Config: conf})
+	link.NewLinkHandler(router, link.LinkHandlerDeps{
+		Repo:     linkRepo,
+		EventBus: eventBus,
+		Config:   conf,
+	})
 
 	// middlewares
 	stack := middleware.Chain(middleware.Cors, middleware.Logging)

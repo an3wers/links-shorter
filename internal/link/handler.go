@@ -2,6 +2,7 @@ package link
 
 import (
 	"go/links-shorter/configs"
+	"go/links-shorter/internal/stat"
 	"go/links-shorter/pkg/middleware"
 	"go/links-shorter/pkg/req"
 	"go/links-shorter/pkg/resp"
@@ -13,19 +14,22 @@ import (
 )
 
 type LinkHandlerDeps struct {
-	Repo   *LinkRepository
-	Config *configs.Config
+	Repo     *LinkRepository
+	StatRepo *stat.StatRepository
+	Config   *configs.Config
 }
 
 type LinkHandler struct {
-	Repo   *LinkRepository
-	Config *configs.Config
+	Repo     *LinkRepository
+	StatRepo *stat.StatRepository
+	Config   *configs.Config
 }
 
 func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) {
 
 	handler := &LinkHandler{
-		Repo: deps.Repo,
+		Repo:     deps.Repo,
+		StatRepo: deps.StatRepo,
 	}
 
 	// public
@@ -183,6 +187,8 @@ func (handler *LinkHandler) GoTo() http.HandlerFunc {
 			resp.Json(w, http.StatusNotFound, err.Error())
 			return
 		}
+
+		handler.StatRepo.AddClick(link.ID)
 
 		http.Redirect(w, r, link.Url, http.StatusTemporaryRedirect)
 

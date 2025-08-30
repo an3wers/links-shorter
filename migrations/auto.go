@@ -19,7 +19,7 @@ func main() {
 	}
 
 	db, err := gorm.Open(postgres.Open(os.Getenv("DSN")), &gorm.Config{
-		DisableForeignKeyConstraintWhenMigrating: true,
+		// DisableForeignKeyConstraintWhenMigrating: true,
 	})
 
 	if err != nil {

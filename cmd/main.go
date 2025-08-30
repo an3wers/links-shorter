@@ -6,6 +6,7 @@ import (
 	"go/links-shorter/internal/auth"
 	"go/links-shorter/internal/halthcheck"
 	"go/links-shorter/internal/link"
+	"go/links-shorter/internal/stat"
 	"go/links-shorter/internal/user"
 	"go/links-shorter/pkg/db"
 	"go/links-shorter/pkg/middleware"
@@ -22,6 +23,7 @@ func main() {
 	// repositories
 	linkRepo := link.NewLinkRepository(db)
 	userRepo := user.NewUserRepository(db)
+	statRepo := stat.NewStatRepository(db)
 
 	// services
 	authService := auth.NewAuthService((userRepo))
@@ -36,7 +38,7 @@ func main() {
 			AuthConfig:  &conf.Auth,
 			AuthService: authService,
 		})
-	link.NewLinkHandler(router, link.LinkHandlerDeps{Repo: linkRepo, Config: conf})
+	link.NewLinkHandler(router, link.LinkHandlerDeps{Repo: linkRepo, StatRepo: statRepo, Config: conf})
 
 	// middlewares
 	stack := middleware.Chain(middleware.Cors, middleware.Logging)

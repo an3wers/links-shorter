@@ -2,7 +2,7 @@ package link
 
 import (
 	"go/links-shorter/configs"
-	"go/links-shorter/internal/stat"
+	"go/links-shorter/pkg/di"
 	"go/links-shorter/pkg/middleware"
 	"go/links-shorter/pkg/req"
 	"go/links-shorter/pkg/resp"
@@ -13,15 +13,17 @@ import (
 	"gorm.io/gorm"
 )
 
+// TODO: Решить проблему с StatRepo: statRepo в package link
+
 type LinkHandlerDeps struct {
 	Repo     *LinkRepository
-	StatRepo *stat.StatRepository
+	StatRepo di.IStatRepository
 	Config   *configs.Config
 }
 
 type LinkHandler struct {
 	Repo     *LinkRepository
-	StatRepo *stat.StatRepository
+	StatRepo di.IStatRepository
 	Config   *configs.Config
 }
 
